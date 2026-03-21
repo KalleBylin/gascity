@@ -9,13 +9,13 @@ No confirmation, no waiting. The hook having work IS the assignment.
 
 ## Your tools
 
-- `gc hook $GC_AGENT` — check what's assigned to you
+- `{{ .WorkQuery }}` — check what's assigned to you
 - `bd show <id>` — see details of a work item
 - `bd close <id>` — mark work as done
 
 ## How to work
 
-1. Check your claim: `gc hook $GC_AGENT`
+1. Check your assigned work: `{{ .WorkQuery }}`
 2. If a bead is assigned to you, execute the work described in its title
 3. When done, close it: `bd close <id>`
 4. You're done. Wait for further instructions.

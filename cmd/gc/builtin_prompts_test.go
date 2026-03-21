@@ -53,10 +53,6 @@ func assertRenderedPromptDoesNotContain(t *testing.T, rendered, name string, blo
 	}
 }
 
-func currentHookCommand(target string) string {
-	return "gc " + newHookCmd(io.Discard, io.Discard).Name() + " " + target
-}
-
 func currentSlingCommand(target, bead string) string {
 	return "gc " + newSlingCmd(io.Discard, io.Discard).Name() + " " + target + " " + bead
 }
@@ -113,30 +109,54 @@ func TestMaterializeBuiltinPromptsOverwrites(t *testing.T) {
 	}
 }
 
-func TestMaterializeBuiltinFixedWorkerPromptsUseCurrentHookCommand(t *testing.T) {
+func TestMaterializeBuiltinFixedWorkerPromptsUseInjectedWorkQuery(t *testing.T) {
 	dir := materializeBuiltinPromptsForTest(t)
 
+	workQuery := "custom-work-query --agent=$GC_SESSION_NAME"
 	tests := map[string]PromptContext{
-		"worker.md":        {AgentName: "mayor", TemplateName: "mayor"},
-		"one-shot.md":      {AgentName: "mayor", TemplateName: "mayor"},
-		"scoped-worker.md": {AgentName: "hello-world/worker", TemplateName: "worker", RigName: "hello-world", WorkDir: "/city/hello-world"},
+		"worker.md": {
+			AgentName:    "mayor",
+			TemplateName: "mayor",
+			WorkQuery:    workQuery,
+		},
+		"one-shot.md": {
+			AgentName:    "mayor",
+			TemplateName: "mayor",
+			WorkQuery:    workQuery,
+		},
+		"scoped-worker.md": {
+			AgentName:    "hello-world/worker",
+			TemplateName: "worker",
+			RigName:      "hello-world",
+			WorkDir:      "/city/hello-world",
+			WorkQuery:    workQuery,
+		},
 	}
 	for name, ctx := range tests {
 		rendered := renderBuiltinPromptForTest(t, dir, name, ctx)
-		assertRenderedPromptContains(t, rendered, name, []string{currentHookCommand("$GC_AGENT")})
+		assertRenderedPromptContains(t, rendered, name, []string{workQuery})
 		assertRenderedPromptDoesNotContain(t, rendered, name, []string{"gc agent claimed"})
 	}
 }
 
-func TestMaterializeBuiltinLoopPromptsUseCurrentHookAndSlingCommands(t *testing.T) {
+func TestMaterializeBuiltinLoopPromptsUseInjectedWorkQueryAndCurrentSlingCommand(t *testing.T) {
 	dir := materializeBuiltinPromptsForTest(t)
 
+	workQuery := "custom-work-query --agent=$GC_SESSION_NAME"
 	tests := map[string]PromptContext{
-		"loop.md":      {AgentName: "worker", TemplateName: "worker"},
-		"loop-mail.md": {AgentName: "worker", TemplateName: "worker"},
+		"loop.md": {
+			AgentName:    "worker",
+			TemplateName: "worker",
+			WorkQuery:    workQuery,
+		},
+		"loop-mail.md": {
+			AgentName:    "worker",
+			TemplateName: "worker",
+			WorkQuery:    workQuery,
+		},
 	}
 	want := []string{
-		currentHookCommand("$GC_AGENT"),
+		workQuery,
 		currentSlingCommand("$GC_AGENT", "<id>"),
 	}
 	blocked := []string{
